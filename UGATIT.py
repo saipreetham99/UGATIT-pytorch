@@ -390,3 +390,4 @@ class UGATIT(object):
 
             cv2.imwrite(os.path.join(self.result_dir, self.dataset,
                         'test', 'B2A_%d.png' % (n + 1)), B2A * 255.0)
+        print(f"[*] Test results saved in {test_img_dir}")
