@@ -59,8 +59,10 @@ class UGATIT(object):
         print(f"# iteration: {self.iteration}")
         print(f"# residual blocks: {self.n_res}")
         print(f"# discriminator layers: {self.n_dis}")
-        print(f"# weights (adv, cycle, identity, cam): {self.adv_weight}, {
-              self.cycle_weight}, {self.identity_weight}, {self.cam_weight}")
+        print(f"# weights (adv, cycle, identity, cam): {self.adv_weight}")
+        print(f"{self.cycle_weight}, {self.identity_weight}")
+        print(f"{self.cam_weight}")
+
         print("#######################\n")
 
     def build_model(self):
@@ -283,8 +285,7 @@ class UGATIT(object):
             # --- Logging and Saving ---
             if step % self.print_freq == 0:
                 elapsed_time = time.time() - start_time
-                print(f"[{step:6d}/{self.iteration:6d}] time: {elapsed_time:.1f}s, D_loss: {
-                      Discriminator_loss.item():.4f}, G_loss: {Generator_loss.item():.4f}")
+                print(f"[{step:6d}/{self.iteration:6d}] time: {elapsed_time:.1f}s, D_loss: {Discriminator_loss.item():.4f}, G_loss: {Generator_loss.item():.4f}")
 
             if step % self.save_freq == 0:
                 self.save(os.path.join(self.result_dir,
@@ -320,10 +321,8 @@ class UGATIT(object):
             denorm(fake_B2A[0])), tensor2numpy(denorm(fake_B2A2B[0]))], axis=1)
 
         # Save images
-        cv2.imwrite(os.path.join(img_dir, f'A2B_{
-                    step:07d}.png'), RGB2BGR(A2B_grid * 255.0))
-        cv2.imwrite(os.path.join(img_dir, f'B2A_{
-                    step:07d}.png'), RGB2BGR(B2A_grid * 255.0))
+        cv2.imwrite(os.path.join(img_dir, f'A2B_{step:07d}.png'), RGB2BGR(A2B_grid * 255.0))
+        cv2.imwrite(os.path.join(img_dir, f'B2A_{step:07d}.png'), RGB2BGR(B2A_grid * 255.0))
 
         # Restore train mode
         self.genA2B.train()
@@ -354,8 +353,7 @@ class UGATIT(object):
         """Loads model checkpoints."""
         print(f"Loading checkpoint from iteration {step}...")
         try:
-            params = torch.load(os.path.join(dir_path, f'{self.dataset}_params_{
-                                step:07d}.pt'), map_location=self.device)
+            params = torch.load(os.path.join(dir_path, f'{self.dataset}_params_{step:07d}.pt'), map_location=self.device)
             self.genA2B.load_state_dict(params['genA2B'])
             self.genB2A.load_state_dict(params['genB2A'])
             self.disGA.load_state_dict(params['disGA'])
@@ -368,27 +366,22 @@ class UGATIT(object):
             self.D_scaler.load_state_dict(params['D_scaler'])
             print("Checkpoint loaded successfully.")
         except FileNotFoundError:
-            print(f"Error: Checkpoint file not found at {
-                  dir_path}. Starting from scratch.")
+            print(f"Error: Checkpoint file not found at {dir_path}. Starting from scratch.")
         except Exception as e:
             print(f"An error occurred while loading the checkpoint: {e}")
 
     def test(self):
         """Tests the model and saves results."""
-        model_list = glob(os.path.join(
-            self.result_dir, self.dataset, 'model', '*.pt'))
+        model_list = glob(os.path.join(self.result_dir, self.dataset, 'model', '*.pt'))
         if not model_list:
             print("Error: No trained model found!")
             return
 
-        model_list.sort(key=lambda x: int(
-            os.path.basename(x).split('_')[-1].split('.')[0]))
+        model_list.sort(key=lambda x: int(os.path.basename(x).split('_')[-1].split('.')[0]))
         latest_checkpoint = model_list[-1]
-        iteration = int(os.path.basename(
-            latest_checkpoint).split('_')[-1].split('.')[0])
+        iteration = int(os.path.basename(latest_checkpoint).split('_')[-1].split('.')[0])
 
-        self.load(os.path.join(self.result_dir,
-                  self.dataset, 'model'), iteration)
+        self.load(os.path.join(self.result_dir,self.dataset, 'model'), iteration)
         print(f"[*] Loaded model from iteration {iteration} for testing.")
 
         self.genA2B.eval()
@@ -403,8 +396,7 @@ class UGATIT(object):
                     fake_A2B, _, _ = self.genA2B(real_A)
 
             A_out_path = os.path.join(test_img_dir, f'A2B_{n + 1}.png')
-            cv2.imwrite(A_out_path, RGB2BGR(
-                tensor2numpy(denorm(fake_A2B[0])) * 255.0))
+            cv2.imwrite(A_out_path, RGB2BGR(tensor2numpy(denorm(fake_A2B[0])) * 255.0))
 
         for n, (real_B, _) in enumerate(self.testB_loader):
             real_B = real_B.to(self.device)
@@ -413,7 +405,6 @@ class UGATIT(object):
                     fake_B2A, _, _ = self.genB2A(real_B)
 
             B_out_path = os.path.join(test_img_dir, f'B2A_{n + 1}.png')
-            cv2.imwrite(B_out_path, RGB2BGR(
-                tensor2numpy(denorm(fake_B2A[0])) * 255.0))
+            cv2.imwrite(B_out_path, RGB2BGR(tensor2numpy(denorm(fake_B2A[0])) * 255.0))
 
         print(f"[*] Test results saved in {test_img_dir}")
