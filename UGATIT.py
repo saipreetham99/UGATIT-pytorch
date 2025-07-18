@@ -171,8 +171,8 @@ class UGATIT(object):
 
         # AMP scalers (created lazily to avoid overhead on CPU)
         if self.amp_enabled:
-            self.scaler_G = amp.GradScaler()
-            self.scaler_D = amp.GradScaler()
+            self.scaler_G = torch.GradScaler("cuda")
+            self.scaler_D = torch.GradScaler("cuda")
 
     # ----------------------------------------------------------------------
     # Train
@@ -231,7 +231,7 @@ class UGATIT(object):
             #   1. Update D
             # ----------------------
             self.D_optim.zero_grad(set_to_none=True)
-            with amp.autocast(enabled=self.amp_enabled):
+            with torch.autocast(device_type="cuda", enabled=self.amp_enabled):
                 fake_A2B, _, _ = self.genA2B(real_A)
                 fake_B2A, _, _ = self.genB2A(real_B)
 
@@ -299,7 +299,7 @@ class UGATIT(object):
             #   2. Update G
             # ----------------------
             self.G_optim.zero_grad(set_to_none=True)
-            with amp.autocast(enabled=self.amp_enabled):
+            with torch.autocast(device_type="cuda", enabled=self.amp_enabled):
                 fake_A2B, fake_A2B_cam_logit, _ = self.genA2B(real_A)
                 fake_B2A, fake_B2A_cam_logit, _ = self.genB2A(real_B)
                 fake_A2B2A, _, _ = self.genB2A(fake_A2B)
